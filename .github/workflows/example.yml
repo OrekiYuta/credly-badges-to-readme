@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: OrekiYuta/credly-badges-readme@v1
+      - uses: OrekiYuta/credly-badges-to-readme@v1
         with:
           # ---- Required ----
           credly_user: your-credly-username

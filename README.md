@@ -34,7 +34,7 @@ follows pagination (`metadata.total_pages`), so **every** badge is included.
        runs-on: ubuntu-latest
        steps:
          - uses: actions/checkout@v4
-         - uses: OrekiYuta/credly-badges-readme@v1
+         - uses: OrekiYuta/credly-badges-to-readme@v1
            with:
              credly_user: your-credly-username
    ```
@@ -77,7 +77,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: badges
-        uses: OrekiYuta/credly-badges-readme@v1
+        uses: OrekiYuta/credly-badges-to-readme@v1
         with:
           credly_user: your-credly-username
           sort: RECENT
