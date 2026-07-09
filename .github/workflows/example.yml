@@ -1,0 +1,38 @@
+# Example workflow — copy this into your repo's .github/workflows/ folder.
+#
+# Only `credly_user` is required. Every other input is shown below with its
+# DEFAULT value commented out; uncomment and change any you want to override.
+name: Update badges
+
+on:
+  schedule:
+    - cron: "0 2 * * *" # daily at 02:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write # required when commit is true (the default)
+
+jobs:
+  update-readme:
+    name: Update README with Credly badges
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: OrekiYuta/credly-badges-readme@v1
+        with:
+          # ---- Required ----
+          credly_user: your-credly-username
+
+          # ---- Optional (defaults shown, commented out) ----
+          # sort: "RECENT"                                # RECENT = newest first; "" keeps Credly order
+          # readme_path: "README.md"                      # file to update
+          # section_start: "<!--START_SECTION:credly-badges-->"  # start marker in the file
+          # section_end: "<!--END_SECTION:credly-badges-->"      # end marker in the file
+          # badge_size: "80x80"                           # thumbnail size; "" = full-size images
+          # max_badges: "0"                               # limit count; 0 = all
+          # columns: "0"                                  # badges per row via HTML table; 0 = inline
+          # commit: "true"                                # auto commit & push
+          # commit_message: "docs: update README with latest Credly badges"
+          # commit_user_name: "github-actions[bot]"
+          # commit_user_email: "github-actions[bot]@users.noreply.github.com"

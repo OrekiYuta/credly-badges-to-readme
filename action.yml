@@ -1,0 +1,100 @@
+name: "Credly Badges to README"
+description: "Fetch ALL Credly badges (across every page) and inject them into your README."
+author: "OrekiYuta"
+branding:
+  icon: "award"
+  color: "orange"
+
+inputs:
+  credly_user:
+    description: "Credly username or vanity slug (from your profile URL)."
+    required: true
+  sort:
+    description: 'Sort order: "RECENT" (newest first) or "" to keep Credly order.'
+    required: false
+    default: "RECENT"
+  readme_path:
+    description: "Path to the file to update."
+    required: false
+    default: "README.md"
+  section_start:
+    description: "Start marker comment placed in the README."
+    required: false
+    default: "<!--START_SECTION:credly-badges-->"
+  section_end:
+    description: "End marker comment placed in the README."
+    required: false
+    default: "<!--END_SECTION:credly-badges-->"
+  badge_size:
+    description: 'Thumbnail size, e.g. "80x80". Leave empty for full-size images.'
+    required: false
+    default: "80x80"
+  max_badges:
+    description: "Maximum number of badges to render (0 = all)."
+    required: false
+    default: "0"
+  columns:
+    description: "Badges per row via an HTML table (0 = inline, GitHub wraps by width)."
+    required: false
+    default: "0"
+  commit:
+    description: 'Commit and push changes automatically ("true"/"false").'
+    required: false
+    default: "true"
+  commit_message:
+    description: "Commit message used when committing changes."
+    required: false
+    default: "docs: update README with latest Credly badges"
+  commit_user_name:
+    description: "Git user.name used for the commit."
+    required: false
+    default: "github-actions[bot]"
+  commit_user_email:
+    description: "Git user.email used for the commit."
+    required: false
+    default: "github-actions[bot]@users.noreply.github.com"
+
+outputs:
+  badge_count:
+    description: "Number of badges written to the README."
+    value: ${{ steps.badges.outputs.badge_count }}
+  changed:
+    description: 'Whether the README was modified ("true"/"false").'
+    value: ${{ steps.badges.outputs.changed }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.x"
+
+    - name: Update badges
+      id: badges
+      shell: bash
+      env:
+        CREDLY_USER: ${{ inputs.credly_user }}
+        CREDLY_SORT: ${{ inputs.sort }}
+        README_PATH: ${{ inputs.readme_path }}
+        SECTION_START: ${{ inputs.section_start }}
+        SECTION_END: ${{ inputs.section_end }}
+        BADGE_SIZE: ${{ inputs.badge_size }}
+        MAX_BADGES: ${{ inputs.max_badges }}
+        COLUMNS: ${{ inputs.columns }}
+      run: python "${{ github.action_path }}/scripts/update_badges.py"
+
+    - name: Commit changes
+      if: inputs.commit == 'true' && steps.badges.outputs.changed == 'true'
+      shell: bash
+      env:
+        README_PATH: ${{ inputs.readme_path }}
+        COMMIT_MESSAGE: ${{ inputs.commit_message }}
+        COMMIT_USER_NAME: ${{ inputs.commit_user_name }}
+        COMMIT_USER_EMAIL: ${{ inputs.commit_user_email }}
+      run: |
+        git config user.name "$COMMIT_USER_NAME"
+        git config user.email "$COMMIT_USER_EMAIL"
+        git add "$README_PATH"
+        git commit -m "$COMMIT_MESSAGE"
+        git push
