@@ -32,6 +32,8 @@ jobs:
           # badge_size: "80x80"                           # thumbnail size; "" = full-size images
           # max_badges: "0"                               # limit count; 0 = all
           # columns: "0"                                  # badges per row via HTML table; 0 = inline
+          # group_by: "none"                              # group under headings by issuer; "issuer" or "none"
+          # group_heading_level: "3"                      # heading level for group titles (2 = ##, 3 = ###)
           # commit: "true"                                # auto commit & push
           # commit_message: "docs: update README with latest Credly badges"
           # commit_user_name: "github-actions[bot]"

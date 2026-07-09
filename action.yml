@@ -37,6 +37,14 @@ inputs:
     description: "Badges per row via an HTML table (0 = inline, GitHub wraps by width)."
     required: false
     default: "0"
+  group_by:
+    description: 'Group badges under headings: "issuer" (by issuing organization) or "none".'
+    required: false
+    default: "none"
+  group_heading_level:
+    description: "Markdown heading level for group titles (2 = ##, 3 = ###)."
+    required: false
+    default: "3"
   commit:
     description: 'Commit and push changes automatically ("true"/"false").'
     required: false
@@ -82,6 +90,8 @@ runs:
         BADGE_SIZE: ${{ inputs.badge_size }}
         MAX_BADGES: ${{ inputs.max_badges }}
         COLUMNS: ${{ inputs.columns }}
+        GROUP_BY: ${{ inputs.group_by }}
+        GROUP_HEADING_LEVEL: ${{ inputs.group_heading_level }}
       run: python "${{ github.action_path }}/scripts/update_badges.py"
 
     - name: Commit changes

@@ -15,6 +15,8 @@ Configuration is read from environment variables (set by action.yml inputs):
     BADGE_SIZE       Thumbnail size, e.g. "80x80"; empty for full-size image
     MAX_BADGES       Limit number of badges (0 = all)
     COLUMNS          Badges per row using an HTML table (0 = inline, no table)
+    GROUP_BY         Group badges under headings: "issuer" or "none"
+    GROUP_HEADING_LEVEL  Markdown heading level for group titles (e.g. 3 = ###)
 
 GitHub Action outputs (written to $GITHUB_OUTPUT when available):
 
@@ -37,6 +39,8 @@ SECTION_END = os.environ.get("SECTION_END", "<!--END_SECTION:credly-badges-->").
 BADGE_SIZE = os.environ.get("BADGE_SIZE", "80x80").strip()
 MAX_BADGES = int(os.environ.get("MAX_BADGES", "0") or "0")
 COLUMNS = int(os.environ.get("COLUMNS", "0") or "0")
+GROUP_BY = os.environ.get("GROUP_BY", "none").strip().lower()
+GROUP_HEADING_LEVEL = int(os.environ.get("GROUP_HEADING_LEVEL", "3") or "3")
 
 BADGES_JSON = "https://www.credly.com/users/{user}/badges.json?page={page}"
 BADGE_LINK = "https://www.credly.com/badges/{id}"
@@ -88,9 +92,26 @@ def badge_cell(b):
     return f"[![{name}]({img})]({link})"
 
 
-def make_markdown(badges):
-    cells = [badge_cell(b) for b in badges]
+def issuer_name_for(badge):
+    """Return the primary issuing organization's name for a badge.
 
+    Credly stores issuers under badge_template.issuer.entities as a list; the
+    entry with primary=True is the main issuer. Falls back to the first entity,
+    then to a generic label when none is present.
+    """
+    issuer = badge.get("badge_template", {}).get("issuer", {})
+    entities = issuer.get("entities", []) or []
+    primary = next((e for e in entities if e.get("primary")), None)
+    chosen = primary or (entities[0] if entities else None)
+    if chosen:
+        name = (chosen.get("entity", {}) or {}).get("name")
+        if name:
+            return name.strip()
+    return "Other"
+
+
+def render_cells(cells):
+    """Render a list of badge cells as inline text or a fixed-column table."""
     # Inline layout: one badge after another (GitHub wraps them by width).
     if COLUMNS <= 0:
         return "\n".join(cells)
@@ -102,6 +123,37 @@ def make_markdown(badges):
         tds = "".join(f"<td>{c}</td>" for c in row)
         rows.append(f"  <tr>{tds}</tr>")
     return "<table>\n" + "\n".join(rows) + "\n</table>"
+
+
+def make_markdown(badges):
+    if GROUP_BY == "issuer":
+        return make_grouped_markdown(badges, key=issuer_name_for)
+    return render_cells([badge_cell(b) for b in badges])
+
+
+def make_grouped_markdown(badges, key):
+    """Render badges under a Markdown heading per group.
+
+    Group order follows first appearance in the (already sorted) badge list, so
+    the existing RECENT sort still influences which group shows up first.
+    """
+    level = min(max(GROUP_HEADING_LEVEL, 1), 6)
+    hashes = "#" * level
+
+    groups = {}
+    order = []
+    for b in badges:
+        name = key(b)
+        if name not in groups:
+            groups[name] = []
+            order.append(name)
+        groups[name].append(b)
+
+    sections = []
+    for name in order:
+        cells = [badge_cell(b) for b in groups[name]]
+        sections.append(f"{hashes} {name}\n\n{render_cells(cells)}")
+    return "\n\n".join(sections)
 
 
 def update_readme(markdown, path):

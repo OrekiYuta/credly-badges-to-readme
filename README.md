@@ -54,6 +54,8 @@ Find your Credly username in your profile URL:
 | `badge_size`        | No       | `80x80`                                         | Thumbnail size. Empty = full-size images.                       |
 | `max_badges`        | No       | `0`                                             | Limit number of badges (`0` = all).                             |
 | `columns`           | No       | `0`                                             | Badges per row via an HTML table. `0` = inline (wraps by width).|
+| `group_by`          | No       | `none`                                          | `issuer` = group under a heading per issuing organization; `none` = flat list. |
+| `group_heading_level` | No     | `3`                                             | Markdown heading level for group titles (`2` = `##`, `3` = `###`). |
 | `commit`            | No       | `true`                                          | Commit and push changes automatically.                         |
 | `commit_message`    | No       | `docs: update README with latest Credly badges` | Commit message.                                                 |
 | `commit_user_name`  | No       | `github-actions[bot]`                           | Git author name.                                                |
@@ -83,6 +85,8 @@ jobs:
           sort: RECENT
           badge_size: "110x110"
           columns: "5"
+          group_by: "issuer"
+          group_heading_level: "3"
           commit: "false"
       - name: Show result
         run: |
@@ -96,6 +100,25 @@ By default badges are written inline and GitHub wraps them to fill the width.
 Set `columns` to a number to render a fixed grid using an HTML table — e.g.
 `columns: "5"` produces 5 badges per row. Use `0` (default) to keep the inline,
 width-based flow.
+
+## Grouping by issuer
+
+Set `group_by: "issuer"` to organize badges under a Markdown heading for each
+issuing organization (e.g. AWS, Microsoft, HRCI). Badges without a known issuer
+fall back to an `Other` group. Group order follows the badges' sort order, and
+`columns` still applies within each group.
+
+```yaml
+- uses: OrekiYuta/credly-badges-to-readme@v1
+  with:
+    credly_user: your-credly-username
+    group_by: "issuer"
+    group_heading_level: "3"
+    columns: "5"
+```
+
+Adjust `group_heading_level` (`2` = `##`, `3` = `###`, default) to match your
+README's heading hierarchy.
 
 ## Notes
 
